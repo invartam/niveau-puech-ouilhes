@@ -193,7 +193,7 @@ def send_email(value, ts, high, low):
     import smtplib
     from email.message import EmailMessage
 
-    if not config.SMTP_USER or not config.ALERT_EMAIL:
+    if not config.SMTP_HOST or not config.SMTP_USER or not config.ALERT_EMAIL:
         print("Email not configured, skipping alert.")
         return
 

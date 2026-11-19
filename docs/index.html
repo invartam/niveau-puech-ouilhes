@@ -77,11 +77,13 @@
     async function loadLatest() {
       try {
         const res = await fetch('data/latest.json');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         const json = await res.json();
         document.getElementById('currentLevel').textContent = json.value + ' mNGF';
         document.getElementById('lastTs').textContent = json.ts;
       } catch(e) {
-        console.error(e);
+        console.error('loadLatest error:', e);
+        document.getElementById('currentLevel').textContent = 'Erreur';
       }
     }
 
@@ -147,9 +149,17 @@
           interaction: { mode: 'index', intersect: false },
           scales: {
             x: {
-              type: 'time',
-              time: { unit: 'hour', tooltipFormat: 'dd/MM/yyyy HH:mm' },
-              title: { display: true, text: 'Date/Heure' }
+              title: { display: true, text: 'Date/Heure' },
+              ticks: {
+                maxTicksLimit: 12,
+                callback: function(value, index, ticks) {
+                  const label = this.getLabelForValue(value);
+                  if (!label) return '';
+                  // label is ISO string, format it
+                  const d = new Date(label);
+                  return d.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+                }
+              }
             },
             y: {
               title: { display: true, text: 'mNGF' },

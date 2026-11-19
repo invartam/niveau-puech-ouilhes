@@ -23,7 +23,8 @@ EXPORT_DIR = os.path.join(os.path.dirname(__file__), "docs", "data")
 
 # Email (from env)
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+_smtp_port = os.environ.get("SMTP_PORT", "587")
+SMTP_PORT = int(_smtp_port) if _smtp_port.strip() else 587
 SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASS = os.environ.get("SMTP_PASS", "")
 ALERT_EMAIL = os.environ.get("ALERT_EMAIL", "")

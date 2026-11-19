@@ -93,6 +93,14 @@
       const maxData = points.map(p => p.max);
       const avgData = points.map(p => p.avg);
 
+      // Compute dynamic Y scale with margin
+      const allVals = [...minData, ...maxData, ...avgData, THRESHOLD_HIGH, THRESHOLD_LOW];
+      const dataMin = Math.min(...allVals);
+      const dataMax = Math.max(...allVals);
+      const margin = Math.max(1, (dataMax - dataMin) * 0.1);
+      const yMin = Math.floor(dataMin - margin);
+      const yMax = Math.ceil(dataMax + margin);
+
       const ctx = document.getElementById('levelChart').getContext('2d');
       if (chart) chart.destroy();
 
@@ -163,8 +171,8 @@
             },
             y: {
               title: { display: true, text: 'mNGF' },
-              min: 490,
-              max: 505,
+              min: yMin,
+              max: yMax,
             }
           },
           plugins: {

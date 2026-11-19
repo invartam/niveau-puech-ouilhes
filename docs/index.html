@@ -171,7 +171,10 @@
       font-size: 12px;
       color: var(--gf-text-secondary);
     }
-    canvas { max-height: 500px; }
+    canvas { height: 400px !important; max-height: 400px; }
+    @media (max-width: 768px) {
+      canvas { height: 300px !important; max-height: 300px; }
+    }
     .threshold-line { font-size: 11px; }
   </style>
 </head>
@@ -343,6 +346,7 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           scales: {
             x: {

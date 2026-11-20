@@ -41,3 +41,12 @@ jobs:
             git commit -m "Update water level data"
             git push
           fi
+
+      - name: Trigger Pages deploy
+        if: success()
+        run: |
+          curl -X POST https://api.github.com/repos/${{ github.repository }}/actions/workflows/pages.yml/dispatches \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "Content-Type: application/json" \
+            -d '{"ref": "main"}'

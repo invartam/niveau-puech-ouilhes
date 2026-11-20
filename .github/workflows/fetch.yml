@@ -1,6 +1,8 @@
 name: Fetch water levels
 
 on:
+  schedule:
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:

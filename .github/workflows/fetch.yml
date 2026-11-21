@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
+    inputs:
+      backfill:
+        description: 'Force full backfill (30d/365d)'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -22,6 +27,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Restore DB cache
+        uses: actions/cache@v4
+        with:
+          path: data/levels.db
+          key: levels-db-${{ github.ref }}
+          restore-keys: |
+            levels-db-
+
       - name: Run fetch script
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -30,13 +43,13 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
         run: |
-          python scripts/fetch_levels.py
+          python scripts/fetch_levels.py --backfill
 
       - name: Commit and push data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/ docs/data/
+          git add docs/data/ data/alert_state.json
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

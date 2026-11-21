@@ -6,6 +6,9 @@ import sqlite3
 import sys
 import urllib.request
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+PARIS_TZ = ZoneInfo("Europe/Paris")
 
 # Add parent to path for config
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -40,7 +43,7 @@ def parse_api_date(d, h):
 
 def fetch_period(nb_days):
     """Fetch data for the last nb_days days. Returns list of (ts, value)."""
-    today = datetime.now()
+    today = datetime.now(PARIS_TZ)
     date_str = today.strftime("%d-%m-%Y")
     url = config.API_URL.format(date=date_str, nb=nb_days)
     req = urllib.request.Request(url, headers=config.API_HEADERS)
@@ -81,7 +84,8 @@ def get_latest(conn):
 
 def aggregate(conn, hours):
     """Return aggregated data for the last `hours` hours."""
-    cutoff = (datetime.now() - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%S")
+    now_local = datetime.now(PARIS_TZ).replace(tzinfo=None)
+    cutoff = (now_local - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%S")
     rows = conn.execute(
         "SELECT ts, value FROM measurements WHERE ts >= ? ORDER BY ts ASC",
         (cutoff,),
@@ -115,13 +119,12 @@ def export_json(conn):
         buckets = {}
         for ts_str, value in rows:
             dt = datetime.strptime(ts_str, "%Y-%m-%dT%H:%M:%S")
-            # bucket start
-            minute = (dt.minute // (bucket // 60 if bucket >= 60 else 1)) if bucket < 60 else 0
-            # simpler: use timestamp // bucket_seconds
+            # data timestamps are local Europe/Paris (naive); make tz-aware for stable bucketing
+            dt_aware = dt.replace(tzinfo=PARIS_TZ)
             bucket_sec = bucket * 60
-            epoch = dt.timestamp()
+            epoch = dt_aware.timestamp()
             bucket_key = int(epoch // bucket_sec) * bucket_sec
-            bdt = datetime.fromtimestamp(bucket_key)
+            bdt = datetime.fromtimestamp(bucket_key, tz=PARIS_TZ).replace(tzinfo=None)
             key = bdt.strftime("%Y-%m-%dT%H:%M:%S")
             if key not in buckets:
                 buckets[key] = []
